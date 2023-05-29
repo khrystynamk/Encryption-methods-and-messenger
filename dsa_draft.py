@@ -3,12 +3,14 @@ Module for Digital Signature Algorithm (DSA)
 """
 
 import random
+from math import gcd
 from Crypto.Util import number
 from Crypto.Hash import SHA256
-from math import gcd
 
 class DSA:
-
+    """
+    Implementation of a DSA algorithm.
+    """
     low_primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29,
                 31, 37, 41, 43, 47, 53, 59, 61, 67,
                 71, 73, 79, 83, 89, 97, 101, 103,
@@ -22,7 +24,7 @@ class DSA:
                 389, 397, 401, 409, 419, 421, 431,
                 433, 439, 443, 449, 457, 461, 463,
                 467, 479, 487, 491, 499]
-    
+
     def __init__(self) -> None:
         self._p = None
         self._q = None
@@ -42,11 +44,11 @@ class DSA:
     #     """
     #     odd = num - 1
     #     divisions = 0
-    #     # Find odd such that n-1 = 2^k * u 
+    #     # Find odd such that n-1 = 2^k * u
     #     while (odd % 2 == 0):
     #         odd //= 2
     #         divisions += 1
-    
+
     #     for _ in range(20):
     #         random_var = random.randrange(1, num - 1)
     #         if pow(random_var, odd, num) == 1:
@@ -131,8 +133,8 @@ class DSA:
             s and t are from formula: 1 = s * a_val + t * b_val
         """
         if b_val == 0:
-            gcd, s_a, t_b = a_val, 1, 0
-            return (gcd, s_a, t_b)
+            gcd_, s_a, t_b = a_val, 1, 0
+            return (gcd_, s_a, t_b)
 
         s_a2, t_b2, s_a1, t_b1 = 1, 0, 0, 1
         while b_val > 0:
@@ -142,9 +144,9 @@ class DSA:
             t_b = t_b2 - q_val * t_b1
             a_val, b_val, s_a2, t_b2, s_a1, t_b1 = b_val, r_val, s_a1, t_b1, s_a, t_b
 
-        gcd, s_a, t_b = a_val, s_a2, t_b2
+        gcd_, s_a, t_b = a_val, s_a2, t_b2
         # 1 = s * a + t * b
-        return (gcd, s_a, t_b)
+        return (gcd_, s_a, t_b)
 
     # Step 1: Generate public and private keys.
 
@@ -191,8 +193,8 @@ class DSA:
         while True:
             random_elem = random.randint(1, self._p - 1)
             c_1 = self.exp_square(self._g, random_elem, self._p) % self._q
-            gcd = self.extended_eucledian(random_elem, self._q)[1]
-            c_2 = (int("0x" + SHA256.new(message.encode('ascii')).hexdigest(), 0) + self._signing_key * c_1) * gcd % self._q
+            gcd_ = self.extended_eucledian(random_elem, self._q)[1]
+            c_2 = (int("0x" + SHA256.new(message.encode('ascii')).hexdigest(), 0) + self._signing_key * c_1) * gcd_ % self._q
             if c_1 != 0 and c_2 != 0:
                 break
         return str(c_1), str(c_2)
@@ -217,9 +219,9 @@ class DSA:
             'Invalid signature!' -- when an invalid signature is encountered
         """
         c_1, c_2 = encoded_tuple
-        gcd = self.extended_eucledian(int(c_2), self._q)[1]
-        t_1 = (int("0x" + SHA256.new(message.encode('ascii')).hexdigest(), 0)) * gcd % self._q
-        t_2 = (gcd * int(c_1)) % self._q
+        gcd_ = self.extended_eucledian(int(c_2), self._q)[1]
+        t_1 = (int("0x" + SHA256.new(message.encode('ascii')).hexdigest(), 0)) * gcd_ % self._q
+        t_2 = (gcd_ * int(c_1)) % self._q
 
         valid1 = self.exp_square(self._g, t_1, self._p)
         valid2 = self.exp_square(self.verification_key, t_2, self._p)
