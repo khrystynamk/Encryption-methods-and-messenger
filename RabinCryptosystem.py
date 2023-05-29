@@ -73,15 +73,3 @@ class RabinCryptosystem:
     def decrypt_message(self, code):
         return ''.join(self.decrypt(num) for num in code)
 
-# obj = RabinCryptosystem()
-# obj.generate_key()
-
-# message =  open('file30.txt', 'r',  encoding='UTF-8')
-# message = message.read()
-# print(type(message))
-# print(message)
-# message = 'The Rabin trapdoor'
-# c = obj.encrypt_message(message)
-# print(c)
-
-# print(obj.decrypt_message(c))
