@@ -4,7 +4,6 @@ Module for Digital Signature Algorithm (DSA)
 
 import random
 from math import gcd
-from Crypto.Util import number
 from Crypto.Hash import SHA256
 
 class DSA:
@@ -32,63 +31,62 @@ class DSA:
         self._signing_key = None # private key
         self.verification_key = None # public key
 
-    # Below is the code 'made from scratch' that can be used instead of number.isPrime()
+    # Below is the code 'made from scratch' that can be replaced with number.isPrime() in function generate_keys()
 
     # ----------------------------------------------------------------------------------
 
     # Step 1: Primality Testing with the Rabin-Miller Algorithm
 
-    # def miller_rabin(self, num):
-    #     """
-    #     Primality Testing with the Rabin-Miller Algorithm
-    #     """
-    #     odd = num - 1
-    #     divisions = 0
-    #     # Find odd such that n-1 = 2^k * u
-    #     while (odd % 2 == 0):
-    #         odd //= 2
-    #         divisions += 1
+    def miller_rabin(self, num):
+        """
+        Primality Testing with the Rabin-Miller Algorithm
+        """
+        odd = num - 1
+        divisions = 0
+        # Find odd such that n-1 = 2^k * u
+        while (odd % 2 == 0):
+            odd //= 2
+            divisions += 1
 
-    #     for _ in range(20):
-    #         random_var = random.randrange(1, num - 1)
-    #         if pow(random_var, odd, num) == 1:
-    #             return True
-    #         for i in range(divisions):
-    #             if pow(random_var, 2**i * odd, num) == num - 1:
-    #                 return True
-    #     return False
+        for _ in range(20):
+            random_var = random.randrange(1, num - 1)
+            if pow(random_var, odd, num) == 1:
+                return True
+            for i in range(divisions):
+                if pow(random_var, 2**i * odd, num) == num - 1:
+                    return True
+        return False
 
+    def is_prime(self, num):
+        """
+        Check if the given number is a prime number.
+        """
+        if num < 2:
+            return False  # 0, 1, and negative numbers are not prime
+        if num in self.low_primes:
+            return True
 
-    # def is_prime(self, num):
-    #     """
-    #     Check if the given number is a prime number.
-    #     """
-    #     if num < 2:
-    #         return False  # 0, 1, and negative numbers are not prime
-    #     if num in self.low_primes:
-    #         return True
+        # See if any of the low prime numbers can divide num
+        for prime in self.low_primes:
+            if num % prime == 0:
+                return False
 
-    #     # See if any of the low prime numbers can divide num
-    #     for prime in self.low_primes:
-    #         if num % prime == 0:
-    #             return False
+        # If all else fails, call rabinMiller() to determine if num is a prime
+        return self.miller_rabin(num)
 
-    #     # If all else fails, call rabinMiller() to determine if num is a prime
-    #     return self.miller_rabin(num)
-
-
-    # def select_prime_divisor(self, bits_num=1024):
-    #     """
-    #     Return a random prime number of keysize bits in size.
-    #     """
-    #     while True:
-    #         num = random.randrange(2 ** (bits_num - 1), 2 ** (bits_num))
-    #         if self.is_prime(num):
-    #             return num
+    def select_prime_divisor(self, bits_num=1024):
+        """
+        Return a random prime number of keysize bits in size.
+        """
+        while True:
+            num = random.randrange(2 ** (bits_num - 1), 2 ** (bits_num))
+            if self.is_prime(num):
+                return num
 
     # ----------------------------------------------------------------------------------
 
-    def exp_square(self, base, exp, mod):
+    @staticmethod
+    def exp_square(base, exp, mod):
         """
         Square and multiply algorithm for modular exponentiation.
         
@@ -115,7 +113,8 @@ class DSA:
                 result = (result * base) % mod
         return result
 
-    def extended_eucledian(self, a_val, b_val):
+    @staticmethod
+    def extended_eucledian(a_val, b_val):
         """
         Extended Euclidean algorithm.
 
@@ -155,7 +154,7 @@ class DSA:
         Generating public and private keys according to the rules.
         """
         k = random.randrange(2 ** (415), 2 ** (416))
-        q = number.getPrime(160)
+        q = self.select_prime_divisor(160)
         p = (k * q) + 1
         L = p.bit_length()
         t = random.randint(1, p - 1)
@@ -191,7 +190,7 @@ class DSA:
             signature as a pair of c_1 and c_2
         """
         while True:
-            random_elem = random.randint(1, self._p - 1)
+            random_elem = random.randint(1, self._q - 1)
             c_1 = self.exp_square(self._g, random_elem, self._p) % self._q
             gcd_ = self.extended_eucledian(random_elem, self._q)[1]
             c_2 = (int("0x" + SHA256.new(message.encode('ascii')).hexdigest(), 0) + self._signing_key * c_1) * gcd_ % self._q
