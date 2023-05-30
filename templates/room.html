@@ -30,9 +30,8 @@
 
 <script type="text/javascript">
   var socketio = io();
-
   const messages = document.getElementById("messages");
-
+  //const userPrivateKey = document.getElementById("private_key");
   const createMessage = (name, msg) => {
     const content = `
     <div class="text">
@@ -46,17 +45,60 @@
     `;
     messages.innerHTML += content;
   };
-
-  socketio.on("message", (data) => {
-    createMessage(data.name, data.message);
+  socketio.on("auth", (data) => {
+    window.userPrivateKey = data.userKey;
+    window.roomPublicKey = data.roomKey
   });
+  socketio.on("message", (data) => {
+    var decryptedMessage = decryptMessage(data.message, userPrivateKey);
+    createMessage(data.name, decryptedMessage);
+  });
+
+  function decrypt(encrypted_message, private_key) {
+    const [n_val, __d] = private_key;
+    const block_size = Math.floor(String(n_val).length / 3) - 1;
+    const decrypted_message = encrypted_message.split(' ').map(c => BigInt(c).toString());
+    let result = '';
+    
+    for (const code of decrypted_message) {
+        const padded_code = '0'.repeat(block_size * 3 - code.length) + code;
+        
+        for (let i = 0; i < padded_code.length; i += 3) {
+            const charCode = Number(padded_code.slice(i, i + 3));
+            
+            if (charCode !== 0) {
+                result += String.fromCharCode(charCode);
+            }
+        }
+    }
+    
+    return result;
+}
 
   const sendMessage = () => {
     const message = document.getElementById("message");
     if (message.value == "") return;
-    socketio.emit("message", { data: message.value });
+    socketio.emit("message", { data: encryptMessage(message.value, roomPublicKey) });
     message.value = "";
   };
+
+  function encrypt(message, public_key) {
+    const [n_val, e_val] = public_key;
+    const block_size = Math.floor(String(n_val).length / 3) - 1;
+    const ascii_str = Array.from(message, char => ("00" + char.charCodeAt(0)).slice(-3));
+    const ascii_list = [];
+    
+    for (let j = 0; j < ascii_str.length; j += block_size) {
+        ascii_list.push(ascii_str.slice(j, j + block_size).join(''));
+    }
+    
+    ascii_list[ascii_list.length - 1] += '0'.repeat(block_size * 3 - ascii_list[ascii_list.length - 1].length);
+    
+    const encrypted_message = ascii_list.map(c => BigInt(c).toString());
+    
+    return encrypted_message.join(' ');
+}
+
 </script>
 
 {% for msg in messages %}

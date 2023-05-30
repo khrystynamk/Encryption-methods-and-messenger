@@ -7,6 +7,7 @@ transmit the messages.
 from secrets import token_urlsafe
 from flask import Flask, render_template, request, session, redirect, url_for
 from flask_socketio import join_room, leave_room, send, SocketIO
+from rsa_algorithm import RSA
 # from ElGamal import ELGamal
 
 app = Flask(__name__)
@@ -30,6 +31,24 @@ def generate_unique_code(length: int):
 
     return code
 
+def generate_rsa_key_pair():
+    server_keys = RSA()
+    server_keys.calculate_keys()
+    private_key = (server_keys.encrypt_int, server_keys.decrypt_int)
+    public_key = (server_keys.encrypt_int, server_keys.exp)
+    return private_key, public_key
+# get from the file
+#def encrypt_message(message, public_key):
+#    recipient_key = RSA.import_key(public_key)
+#    cipher_rsa = PKCS1_OAEP.new(recipient_key)
+#    encrypted_message = cipher_rsa.encrypt(message.encode())
+#    return encrypted_message
+#
+#def decrypt_message(encrypted_message, private_key):
+#    key = RSA.import_key(private_key)
+#    cipher_rsa = PKCS1_OAEP.new(key)
+#    decrypted_message = cipher_rsa.decrypt(encrypted_message)
+#    return decrypted_message.decode()
 
 @app.route("/", methods=["POST", "GET"])
 @app.route('/home', methods=["POST", "GET"])
@@ -78,9 +97,12 @@ def room():
     room = session.get("room")
     if room is None or session.get("name") is None or room not in rooms:
         return redirect(url_for("home"))
-
     return render_template("room.html", code = room, messages = rooms[room]["messages"])
 
+@socketio.on("auth")
+def auth_user_keys():
+    room = session.get("room")
+    send({"user_private_key":session.get("private_key"), "room_public_key":rooms[room].get("public_key")})
 
 @socketio.on("message")
 def message(data):
@@ -90,11 +112,20 @@ def message(data):
     room = session.get("room")
     if room not in rooms:
         return
+    privateRoomKey = rooms[room].get("private_key")
+    decrypted = RSA.decrypt(data["data"], privateRoomKey)
 
-    content = {"name": session.get("name"), "message": data["data"]}
+    #sender_private_key = session.get("private_key")
+    recipient_public_key = session.get("public_key")
+    encrypted_message = RSA.encrypt(decrypted, recipient_public_key)
+
+    content = {"name": session.get("name"), "message": encrypted_message}
+    # encrypt the message
     send(content, to = room)
+    #save the encrypted message
     rooms[room]["messages"].append(content)
-    print(f"{session.get('name')} said: {data['data']}")
+    #decrypt the message
+    print(f"{session.get('name')} said: {decrypted}")
 
 
 @socketio.on("connect")
@@ -102,6 +133,7 @@ def connect():
     """
     Initializing the socket.
     """
+    session["private_key"], session["public_key"] = generate_rsa_key_pair()
     room = session.get("room")
     name = session.get("name")
     if not room or not name:
@@ -111,8 +143,11 @@ def connect():
         return
 
     join_room(room)
+    room_private_key, room_public_key = generate_rsa_key_pair()
+    socketio.emit("auth", {"userKey": session["private_key"], "roomKey": room_public_key})
     send({"name": name, "message": "has entered the room"}, to = room)
     rooms[room]["members"] += 1
+    rooms[room]["private_key"] = room_private_key
     print(f"{name} joined room {room}")
 
 

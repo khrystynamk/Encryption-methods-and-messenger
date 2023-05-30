@@ -4,7 +4,7 @@ that it works on two different keys (public key and private key).
 Public key is given to everyone to encrypt and send messages to a specific user.
 The private key is kept private and used to decrypt the message.
 """
-from Crypto.Util import number
+import crypto.Util.number as number
 
 
 class RSA:
@@ -95,7 +95,8 @@ class RSA:
 
         self.__d = _d
 
-    def encrypt(self, message: str, public_key: tuple[int]):
+    @staticmethod
+    def encrypt(message: str, public_key: tuple[int]):
         """
         Ecrypting message.
 
@@ -121,7 +122,8 @@ class RSA:
         encrypted_message = [str(pow(int(c), e_val, n_val)) for c in ascii_list]
         return ' '.join(encrypted_message)
 
-    def decrypt(self, encrypted_message: str, private_key: tuple[int]):
+    @staticmethod
+    def decrypt(encrypted_message: str, private_key: tuple[int]):
         """
         Derypting encrypted message.
 
@@ -153,6 +155,6 @@ if __name__ == '__main__':
     r_s_a = RSA()
     r_s_a.calculate_keys()
     MES = 'Hello World! (^-^)'
-    E_MES = r_s_a.encrypt(MES, (r_s_a.encrypt_int, r_s_a.exp))
-    D_MES = r_s_a.decrypt(E_MES, (r_s_a.encrypt_int, r_s_a.decrypt_int))
+    E_MES = RSA.encrypt(MES, (r_s_a.encrypt_int, r_s_a.exp))
+    D_MES = RSA.decrypt(E_MES, (r_s_a.encrypt_int, r_s_a.decrypt_int))
     assert MES == D_MES
