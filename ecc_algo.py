@@ -11,7 +11,7 @@ class ECC:
     """class that represents an Elliptic Curve Cryptography
     using Integrated Encryption Scheme"""
 
-    def __init__(self, user1:'User', user2:'User', curve=ec.SECP256R1()) -> None:
+    def __init__(self, user1:'User', user2:'User', curve=ec.SECP521R1()) -> None:
         self.curve = curve
         self._iv = b"random_ivrandom_"  # generate a valid 16-byte IV
         self._kenc = None
