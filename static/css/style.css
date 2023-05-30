@@ -1,0 +1,144 @@
+* {
+  font-family: 'Anonymous Pro', monospace;
+  overflow-y: hidden;
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.main-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  border: solid 2px black;
+  height: 50vh;
+  width: 50%;
+  margin-top: 17%;
+}
+
+.nickname {
+  border: none;
+}
+
+.join {
+  display: flex;
+  flex-direction: row;
+  border: solid 0.8px black;
+  padding: 10px;
+}
+
+.join input {
+  border: none;
+}
+
+.join button {
+  border: none;
+  background-color: rgba(0, 255, 255, 0.778);
+  cursor: pointer;
+}
+
+.join button:hover {
+  background-color: rgba(0, 218, 218, 0.872);
+  transition: 0.4s all;
+}
+
+.create-btn {
+  width: 180px;
+  height: 40px;
+  border: none;
+  background-color: aliceblue;
+  cursor: pointer;
+}
+
+.create-btn:hover {
+  background-color: rgba(167, 190, 209, 0.827);
+  transition: 0.4s all;
+}
+
+.error {
+  font-size: 14px;
+  color: red;
+}
+
+.message-box {
+  border-color: black;
+  border: solid 2px;
+  background-color: rgb(247, 251, 253);
+  margin-top: 7vh;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  width: 80vw;
+  align-items: stretch;
+}
+
+#send-btn {
+  border: solid 1px black;
+  padding: 5px;
+  width: 20%;
+  background-color: rgba(0, 255, 255, 0.778);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+#send-btn:hover {
+  background-color: rgba(12, 224, 224, 0.872);
+  transition: 0.4s all;
+}
+
+.messages {
+  overflow-y: scroll;
+  flex: 1;
+  width: 100%;
+}
+
+.inputs {
+  padding: 10px;
+  display: flex;
+}
+
+.inputs input{
+  border: none;
+  border-left: solid 1px black;
+  border-top: solid 1px black;
+  border-bottom: solid 1px black;
+  padding-left: 15px;
+}
+
+h2 {
+  text-align: center;
+}
+
+#message {
+  flex: 1;
+}
+
+.text {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.muted {
+  font-size: 10px;
+  color: darkgray;
+}
+
+.arrow {
+  position: absolute;
+  height: 40px;
+  width: 40px;
+  left: 0;
+  top: 0;
+  margin-top: 25px;
+  margin-left: 30px;
+}
